@@ -1,3 +1,4 @@
+#mail_api
 import smtplib
 
 def send_email(receiver, message):
@@ -8,6 +9,6 @@ def send_email(receiver, message):
     
     server = smtplib.SMTP("smtp.gmail.com", 587)
     server.starttls()
-    server.login(email, "")
+    server.login(email, "dequbmvbuidmxuuf")
     server.sendmail(email, receiver, text)
     return True
