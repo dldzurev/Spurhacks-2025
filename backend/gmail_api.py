@@ -8,6 +8,6 @@ def send_email(receiver, message):
     
     server = smtplib.SMTP("smtp.gmail.com", 587)
     server.starttls()
-    server.login(email, "xixkcdjytrxuevir")
+    server.login(email, "")
     server.sendmail(email, receiver, text)
     return True
