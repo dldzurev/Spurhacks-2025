@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { 
   Mail,
   Phone,
@@ -16,16 +16,18 @@ import {
   Bell,
   Cloud,
   Settings,
-  HardDrive
+  HardDrive,
+  Save,
+  BookOpen // For Notion icon
 } from 'lucide-react';
 import { useWorkflow } from '../../context/WorkflowContext';
 
 const TaskQueue = ({ activeWorkflow }) => {
   const [executing, setExecuting] = useState(false);
-  const [localConfig, setLocalConfig] = useState({}); // Local state for form inputs
-  const updateTimeoutRef = useRef(null);
+  const [localConfig, setLocalConfig] = useState({});
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   
-  // Get data and actions from context - MOVED BEFORE EARLY RETURN
+  // Get data and actions from context
   const {
     getActiveWorkflow,
     executeTask,
@@ -37,76 +39,94 @@ const TaskQueue = ({ activeWorkflow }) => {
   } = useWorkflow();
 
   const workflowData = getActiveWorkflow();
-  
-  // Get tasks data - MOVED BEFORE EARLY RETURN
   const completedTasks = workflowData ? getCompletedTasks(workflowData.id) : [];
   const failedTasks = workflowData ? getFailedTasks(workflowData.id) : [];
   const pendingTasks = workflowData ? getPendingTasks(workflowData.id) : [];
   const currentTask = pendingTasks[0];
 
-  // Update local config when current task changes - MOVED BEFORE EARLY RETURN
+  // Load config when task changes
   useEffect(() => {
-    if (currentTask) {
-      setLocalConfig(currentTask.config || {});
+    if (currentTask?.config) {
+      setLocalConfig(currentTask.config);
+      setHasUnsavedChanges(false);
     }
   }, [currentTask?.id]);
 
-// FIXED: Handle task update with debounced context update
-const handleUpdate = useCallback((field, value) => {
-    if (!currentTask) return;
+  // Handle input changes (local only)
+  const handleInputChange = useCallback((field, value) => {
+    setLocalConfig(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    setHasUnsavedChanges(true);
+  }, []);
+
+  // Save changes to context
+  const handleSave = useCallback(() => {
+    if (!currentTask || !workflowData || !hasUnsavedChanges) return;
     
-    // Update local state immediately (no re-render from context)
-    const newConfig = { ...localConfig, [field]: value };
-    setLocalConfig(newConfig);
-    
-    // Clear existing timeout
-    if (updateTimeoutRef.current) {
-      clearTimeout(updateTimeoutRef.current);
+    updateTaskConfig(workflowData.id, currentTask.id, localConfig);
+    setHasUnsavedChanges(false);
+  }, [currentTask?.id, workflowData?.id, localConfig, hasUnsavedChanges, updateTaskConfig]);
+
+  // Reset changes
+  const handleReset = useCallback(() => {
+    if (currentTask?.config) {
+      setLocalConfig(currentTask.config);
+      setHasUnsavedChanges(false);
     }
-    
-    // Set new timeout to update context after user stops typing
-    updateTimeoutRef.current = setTimeout(() => {
-      // Use the newConfig we just created, not the stale localConfig from closure
-      updateTaskConfig(workflowData.id, currentTask.id, newConfig);
-    }, 500); // Wait 500ms after user stops typing
-  }, [currentTask, localConfig, updateTaskConfig, workflowData]);
-  
-  // ALSO FIX: Handle blur to immediately save changes
-  const handleBlur = useCallback((field, value) => {
-    if (!currentTask) return;
-    
-    // Clear timeout and update immediately
-    if (updateTimeoutRef.current) {
-      clearTimeout(updateTimeoutRef.current);
+  }, [currentTask?.config]);
+
+  // Auto-save on blur for better UX
+  const handleBlur = useCallback(() => {
+    if (hasUnsavedChanges) {
+      handleSave();
     }
-    
-    // Use the current value passed to the function
-    const updatedConfig = { ...localConfig, [field]: value };
-    setLocalConfig(updatedConfig); // Update local state too
-    updateTaskConfig(workflowData.id, currentTask.id, updatedConfig);
-  }, [currentTask, localConfig, updateTaskConfig, workflowData]);
-  // Handle task execution
+  }, [hasUnsavedChanges, handleSave]);
+
+  // Execute task
   const handleExecute = useCallback(async (taskToExecute = currentTask) => {
-    if (!taskToExecute) return;
+    if (!taskToExecute || !workflowData) return;
+    
+    // Auto-save before execution
+    if (hasUnsavedChanges && taskToExecute.id === currentTask?.id) {
+      handleSave();
+    }
     
     setExecuting(true);
     try {
-      // Use the local config for execution
-      await executeTask(workflowData.id, taskToExecute.id, taskToExecute.type, localConfig);
+      const configToUse = taskToExecute.id === currentTask?.id ? localConfig : taskToExecute.config;
+      await executeTask(workflowData.id, taskToExecute.id, taskToExecute.type, configToUse);
     } catch (error) {
       console.error('Task execution failed:', error);
     } finally {
       setExecuting(false);
     }
-  }, [currentTask, executeTask, workflowData, localConfig]);
+  }, [currentTask?.id, executeTask, workflowData?.id, localConfig, hasUnsavedChanges, handleSave]);
 
   // Handle task retry
   const handleRetry = useCallback((task) => {
+    if (!workflowData) return;
     updateTaskStatus(workflowData.id, task.id, 'pending');
     setTimeout(() => handleExecute(task), 100);
-  }, [updateTaskStatus, workflowData, handleExecute]);
+  }, [updateTaskStatus, workflowData?.id, handleExecute]);
 
-  // NOW SAFE TO DO EARLY RETURN AFTER ALL HOOKS
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault();
+        handleSave();
+      }
+      if (e.key === 'Escape') {
+        handleReset();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleSave, handleReset]);
+
   if (!workflowData) {
     return (
       <div className="h-full flex items-center justify-center bg-gray-50 font-mono">
@@ -120,35 +140,28 @@ const handleUpdate = useCallback((field, value) => {
     );
   }
 
-  // Get icon for task type with proper icons - you can replace these with your images
+  // Get icon for task type
   const getTaskIcon = (type, className = "w-5 h-5") => {
     switch (type) {
       case 'email': 
-        // Replace with: <img src="/icons/email.png" className={className} alt="Email" />
         return <img src="/icons/gmail.png" className={className} alt="Email" />;
       case 'phone': 
-        // Replace with: <img src="/icons/phone.png" className={className} alt="Phone" />
         return <Phone className={className} />;
       case 'calendar': 
-        // Replace with: <img src="/icons/calendar.png" className={className} alt="Calendar" />
         return <img src="/icons/gcal.png" className={className} alt="Calendar" />;
       case 'slack': 
-        // Replace with: <img src="/icons/slack.png" className={className} alt="Slack" />
         return <img src="/icons/slack.png" className={className} alt="Slack" />;
+      case 'notion':
+        return <BookOpen className={className} />; // Using BookOpen as Notion icon
       case 'document': 
-        // Replace with: <img src="/icons/document.png" className={className} alt="Document" />
         return <FileText className={className} />;
       case 'notification': 
-        // Replace with: <img src="/icons/notification.png" className={className} alt="Notification" />
         return <Bell className={className} />;
       case 'api': 
-        // Replace with: <img src="/icons/api.png" className={className} alt="API" />
         return <Cloud className={className} />;
       case 'automation': 
-        // Replace with: <img src="/icons/automation.png" className={className} alt="Automation" />
         return <Settings className={className} />;
       case 'drive': 
-        // Replace with: <img src="/icons/drive.png" className={className} alt="Drive" />
         return <HardDrive className={className} />;
       default: 
         return <div className={`${className} bg-gray-400 rounded`}></div>;
@@ -160,7 +173,6 @@ const handleUpdate = useCallback((field, value) => {
     const isCompleted = type === 'completed';
     const isFailed = type === 'failed';
     const isCurrent = type === 'current';
-    const isPending = type === 'pending';
 
     return (
       <div className={`p-4 rounded border font-mono text-sm ${
@@ -219,46 +231,89 @@ const handleUpdate = useCallback((field, value) => {
           )}
         </div>
 
-        {/* Show config for current task only - FIXED FORM INPUTS */}
+        {/* Show config for current task only */}
         {isCurrent && (
           <>
+            {/* Save/Reset Controls */}
+            {hasUnsavedChanges && (
+              <div className="flex items-center gap-2 mb-4 p-3 bg-amber-50 border border-amber-200 rounded">
+                <div className="flex-1 text-sm text-amber-700">
+                  <span className="font-medium">Unsaved changes</span>
+                  <span className="text-xs block">Cmd+S to save, Esc to reset</span>
+                </div>
+                <button
+                  onClick={handleSave}
+                  className="flex items-center gap-1 px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
+                >
+                  <Save className="w-3 h-3" />
+                  Save
+                </button>
+                <button
+                  onClick={handleReset}
+                  className="flex items-center gap-1 px-3 py-1 bg-gray-600 text-white text-xs rounded hover:bg-gray-700 transition-colors"
+                >
+                  <X className="w-3 h-3" />
+                  Reset
+                </button>
+              </div>
+            )}
+
             <div className="space-y-3 mb-4 border-t border-gray-300 pt-4">
               {Object.entries(localConfig || {}).map(([key, value]) => (
                 <div key={key}>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     {key.replace(/([A-Z])/g, ' $1').toLowerCase()}:
                   </label>
-                  {key === 'message' || key === 'notes' ? (
+                  {key === 'message' || key === 'notes' || key === 'project' || key === 'content' ? (
                     <textarea
                       value={value || ''}
-                      onChange={(e) => handleUpdate(key, e.target.value)}
-                      onBlur={(e) => handleBlur(key, e.target.value)}
+                      onChange={(e) => handleInputChange(key, e.target.value)}
+                      onBlur={handleBlur}
                       className="w-full px-3 py-2 text-sm border border-gray-300 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none font-mono"
-                      rows={4}
-                      placeholder={`Enter ${key}...`}
+                      rows={key === 'project' ? 6 : 4}
+                      placeholder={
+                        key === 'project' ? 'Enter your project idea or description...' :
+                        key === 'content' ? 'Enter page content...' :
+                        `Enter ${key}...`
+                      }
                     />
                   ) : (
                     <input
                       type="text"
                       value={value || ''}
-                      onChange={(e) => handleUpdate(key, e.target.value)}
-                      onBlur={(e) => handleBlur(key, e.target.value)}
+                      onChange={(e) => handleInputChange(key, e.target.value)}
+                      onBlur={handleBlur}
                       className="w-full px-3 py-2 text-sm border border-gray-300 rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 font-mono"
-                      placeholder={`Enter ${key}...`}
+                      placeholder={
+                        key === 'title' ? 'Enter page title...' :
+                        `Enter ${key}...`
+                      }
                     />
                   )}
                 </div>
               ))}
             </div>
             
-            <button
-              onClick={() => onExecute(task)}
-              disabled={executing}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50 transition-colors"
-            >
-              <Play className="w-4 h-4" />
-              {executing ? 'executing...' : 'execute'}
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => onExecute(task)}
+                disabled={executing}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              >
+                <Play className="w-4 h-4" />
+                {executing ? 'executing...' : 'execute'}
+              </button>
+              
+              {hasUnsavedChanges && (
+                <button
+                  onClick={handleSave}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
+                >
+                  <Save className="w-4 h-4" />
+                  save
+                </button>
+              )}
+            </div>
           </>
         )}
       </div>
@@ -267,12 +322,17 @@ const handleUpdate = useCallback((field, value) => {
 
   return (
     <div className="h-full flex flex-col bg-gray-50 font-mono">
-      {/* Header - Solarized Style */}
+      {/* Header */}
       <div className="bg-gray-200 border-b border-gray-300 px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Activity className="w-5 h-5 text-gray-600" />
             <h3 className="font-medium text-gray-800 text-base">task queue</h3>
+            {hasUnsavedChanges && (
+              <span className="px-2 py-1 bg-amber-100 border border-amber-200 text-amber-700 text-xs rounded">
+                unsaved
+              </span>
+            )}
           </div>
           <div className="flex gap-2 text-sm">
             <span className="px-3 py-1 bg-green-100 border border-green-200 text-green-700 rounded">
@@ -357,7 +417,7 @@ const handleUpdate = useCallback((field, value) => {
               up next ({pendingTasks.length - 1})
             </h4>
             <div className="space-y-3">
-              {pendingTasks.slice(1).map((task, index) => (
+              {pendingTasks.slice(1).map(task => (
                 <TaskCard
                   key={task.id}
                   task={task}

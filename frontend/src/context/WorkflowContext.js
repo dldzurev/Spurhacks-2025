@@ -318,6 +318,92 @@ export function WorkflowProvider({ children }) {
         payload: { workflowId, task }
         });
     },
+
+
+// Add these helper functions to your WorkflowContext actions:
+
+// Helper function to create Notion tasks
+createNotionTask: (title, project, content = '', priority = 'medium') => {
+    return {
+      id: `task-${Date.now()}`,
+      type: 'notion',
+      title: title,
+      description: 'Create structured project plan in Notion',
+      priority: priority,
+      estimatedTime: '45 seconds',
+      status: 'pending',
+      order: 1,
+      position: { x: 100, y: 100 },
+      config: {
+        project: project,
+        content: content
+      }
+    };
+  },
+  
+  // Quick add Notion task to existing workflow
+  addNotionTaskToWorkflow: (workflowId, title, project, content = '') => {
+    const notionTask = actions.createNotionTask(title, project, content);
+    
+    // Get current workflow to determine next order
+    const workflow = state.workflows[workflowId];
+    if (workflow) {
+      const maxOrder = Math.max(...workflow.tasks.map(t => t.order), 0);
+      notionTask.order = maxOrder + 1;
+      notionTask.position = { x: 100 + (maxOrder * 300), y: 100 };
+    }
+    
+    actions.addTaskToWorkflow(workflowId, notionTask);
+    
+    // Add a note about the new task
+    actions.addNote(workflowId, `📝 Added Notion task: "${title}"`, 'system');
+    
+    return notionTask;
+  },
+  
+  // Predefined Notion task templates
+  getNotionTemplate: (templateType, customData = {}) => {
+    const templates = {
+      'project-plan': {
+        title: 'Create Project Plan',
+        project: customData.project || 'New Project Initiative',
+        content: 'Create a comprehensive project plan including objectives, timeline, resources, milestones, risk assessment, and success metrics.'
+      },
+      'meeting-agenda': {
+        title: 'Create Meeting Agenda',
+        project: customData.project || 'Meeting Agenda',
+        content: 'Generate a structured meeting agenda with discussion topics, time allocations, attendees, and action items template.'
+      },
+      'onboarding': {
+        title: 'Create Onboarding Plan',
+        project: customData.project || 'Client Onboarding Process',
+        content: 'Develop a comprehensive onboarding plan including welcome procedures, account setup, training materials, and follow-up schedule.'
+      },
+      'documentation': {
+        title: 'Create Documentation',
+        project: customData.project || 'Project Documentation',
+        content: 'Generate detailed project documentation including overview, technical specifications, user guides, and maintenance procedures.'
+      },
+      'strategy': {
+        title: 'Create Strategy Plan',
+        project: customData.project || 'Strategic Planning',
+        content: 'Develop a strategic plan including market analysis, competitive landscape, goals, tactics, and measurement criteria.'
+      }
+    };
+    
+    const template = templates[templateType];
+    if (!template) {
+      throw new Error(`Unknown template type: ${templateType}`);
+    }
+    
+    return actions.createNotionTask(
+      template.title,
+      template.project,
+      template.content,
+      'high'
+    );
+  },
+
     
     // Remove task from workflow
     removeTaskFromWorkflow: (workflowId, taskId) => {
@@ -492,135 +578,288 @@ export function WorkflowProvider({ children }) {
         payload: { workflowId, noteId }
       });
     },
-
-    // Execute task (simplified with success message)
-    executeTask: async (workflowId, taskId, taskType, config) => {
-      try {
-        // Update to executing state
-        actions.updateTaskStatus(workflowId, taskId, 'executing');
-
-        // Mock API call delay
-        await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
-
-        // Mock success/failure (90% success rate)
-        const isSuccess = Math.random() > 0.1;
-
-        if (isSuccess) {
-          const successMessage = getMockSuccessMessage(taskType, config);
-          
-          // Mark as completed
-          actions.updateTaskStatus(workflowId, taskId, 'completed', null, { success: true });
-          
-          // Add success note
-          actions.addNote(workflowId, successMessage, 'system');
-          
-          return { success: true };
-        } else {
-          const errorMessage = `❌ Task failed: Unable to complete ${taskType} task. Please check configuration and try again.`;
-          
-          // Mark as failed
-          actions.updateTaskStatus(workflowId, taskId, 'failed', errorMessage);
-          
-          // Add failure note
-          actions.addNote(workflowId, errorMessage, 'system');
-          
-          throw new Error(errorMessage);
-        }
-      } catch (error) {
-        // Mark as failed
-        actions.updateTaskStatus(workflowId, taskId, 'failed', error.message);
-        
-        // Add error note if not already added
-        if (!error.message.includes('❌')) {
-          actions.addNote(workflowId, `❌ Unexpected error: ${error.message}`, 'system');
-        }
-        
-        throw error;
-      }
-    },
-
-    // Generate new workflow (mock AI)
-    generateWorkflow: async (prompt) => {
-      const workflowId = `workflow-${Date.now()}`;
-      
-      // Simple keyword-based generation for demo
-      let tasks = [];
-      
-      if (prompt.toLowerCase().includes('onboarding')) {
-        tasks = [
-          {
-            id: `task-${Date.now()}-1`,
-            type: 'email',
-            title: 'Send welcome email',
-            description: 'Welcome new client with getting started information',
-            priority: 'high',
-            estimatedTime: '30 seconds',
-            status: 'pending',
-            order: 1,
-            position: { x: 100, y: 100 },
-            config: {
-              recipient: 'newclient@example.com',
-              subject: 'Welcome! Let\'s get you started',
-              message: 'Hi there!\n\nWelcome to our platform! We\'re excited to have you on board.\n\nBest regards,\nThe Team'
-            }
-          },
-          {
-            id: `task-${Date.now()}-2`,
-            type: 'slack',
-            title: 'Notify team',
-            description: 'Alert the team about new client',
-            priority: 'low',
-            estimatedTime: '5 seconds',
-            status: 'pending',
-            order: 2,
-            position: { x: 400, y: 100 },
-            config: {
-              channel: '#client-updates',
-              message: '🎉 New client just signed up! Onboarding workflow initiated.'
-            }
-          }
-        ];
-      } else {
-        tasks = [
-          {
-            id: `task-${Date.now()}-1`,
-            type: 'email',
-            title: 'Send outreach email',
-            description: 'Initial outreach based on your prompt',
-            priority: 'medium',
-            estimatedTime: '30 seconds',
-            status: 'pending',
-            order: 1,
-            position: { x: 100, y: 100 },
-            config: {
-              recipient: 'contact@example.com',
-              subject: 'Reaching out',
-              message: `Hi there!\n\nI wanted to reach out regarding: ${prompt}\n\nWould you be interested in learning more?\n\nBest regards`
-            }
-          }
-        ];
-      }
-
-      const newWorkflow = {
-        id: workflowId,
-        name: prompt.length > 30 ? `${prompt.substring(0, 30)}...` : prompt,
-        description: `AI-generated workflow from: "${prompt}"`,
-        generatedAt: new Date().toISOString(),
-        status: 'active',
-        notes: [
-          {
-            id: `note-${Date.now()}`,
-            type: 'system',
-            content: `🤖 Workflow generated from prompt: "${prompt}"`,
-            timestamp: new Date().toISOString()
-          }
-        ],
-        tasks
+// Execute task - calls your FastAPI backend
+executeTask: async (workflowId, taskId, taskType, config) => {
+    try {
+      // Update to executing state
+      actions.updateTaskStatus(workflowId, taskId, 'executing');
+  
+      // Prepare the request payload based on task type
+      let payload = {
+        action: taskType
       };
+  
+      // Map task config to API expected format
+      switch (taskType) {
+        case 'email':
+          payload.address = config.recipient;
+          payload.message = config.message || `Subject: ${config.subject}\n\n${config.message || 'No message content'}`;
+          break;
+        
+        case 'phone':
+          payload.number = config.recipient;
+          payload.task = config.message || 'Automated call from workflow';
+          break;
+        
+        case 'calendar':
+          payload.date = config.date;
+          payload.location = config.location || 'TBD';
+          payload.event = config.title || config.event || 'Scheduled event';
+          break;
+        
+        case 'slack':
+          payload.message = config.message;
+          payload.channel = config.channel || 'social';
+          break;
+        
+        case 'notion':
+        case 'document':
+          // Handle both notion and document types
+          payload.action = 'notion'; // Always send 'notion' to backend
+          payload.project = config.project || config.title || 'New Project';
+          payload.content = config.content || config.message || '';
+          break;
+        
+        default:
+          throw new Error(`Unsupported task type: ${taskType}`);
+      }
 
-      actions.addWorkflow(newWorkflow);
-      return newWorkflow;
+   // Call your FastAPI backend
+   const response = await fetch('http://127.0.0.1:8000/action', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
     },
+    body: JSON.stringify(payload)
+  });
+
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+  
+      const result = await response.json();
+      
+      // Check if the response indicates success
+      const responseText = result.response || '';
+      const isSuccess = !responseText.toLowerCase().includes('failed') && 
+                       !responseText.toLowerCase().includes('error') && 
+                       !responseText.toLowerCase().includes('incorrect') &&
+                       !responseText.toLowerCase().includes('cannot');
+  
+      if (isSuccess) {
+        // Mark as completed
+        actions.updateTaskStatus(workflowId, taskId, 'completed', null, { 
+          success: true, 
+          response: responseText 
+        });
+        
+        // Add success note with actual API response
+        actions.addNote(workflowId, `✅ ${responseText}`, 'system');
+        
+        return { success: true, response: responseText };
+      } else {
+        // Mark as failed with API error message
+        actions.updateTaskStatus(workflowId, taskId, 'failed', responseText);
+        
+        // Add failure note
+        actions.addNote(workflowId, `❌ ${responseText}`, 'system');
+        
+        throw new Error(responseText);
+      }
+    } catch (error) {
+      const errorMessage = error.message || 'Unknown error occurred';
+      
+      // Mark as failed
+      actions.updateTaskStatus(workflowId, taskId, 'failed', errorMessage);
+      
+      // Add error note
+      actions.addNote(workflowId, `❌ Task execution failed: ${errorMessage}`, 'system');
+      
+      throw error;
+    }
+  },
+
+// Generate new workflow (mock AI) - Updated with Notion support
+generateWorkflow: async (prompt) => {
+    const workflowId = `workflow-${Date.now()}`;
+    
+    // Simple keyword-based generation for demo
+    let tasks = [];
+    
+    if (prompt.toLowerCase().includes('onboarding')) {
+      tasks = [
+        {
+          id: `task-${Date.now()}-1`,
+          type: 'notion',
+          title: 'Create onboarding plan',
+          description: 'Generate detailed onboarding documentation in Notion',
+          priority: 'high',
+          estimatedTime: '45 seconds',
+          status: 'pending',
+          order: 1,
+          position: { x: 100, y: 100 },
+          config: {
+            project: 'Client Onboarding Process',
+            content: 'Create a comprehensive onboarding plan including welcome procedures, account setup, training materials, and follow-up schedule.'
+          }
+        },
+        {
+          id: `task-${Date.now()}-2`,
+          type: 'email',
+          title: 'Send welcome email',
+          description: 'Welcome new client with getting started information',
+          priority: 'high',
+          estimatedTime: '30 seconds',
+          status: 'pending',
+          order: 2,
+          position: { x: 400, y: 100 },
+          config: {
+            recipient: 'hanlyu2005@gmail.com',
+            subject: 'Welcome! Let\'s get you started',
+            message: 'Hi there!\n\nWelcome to our platform! We\'re excited to have you on board.\n\nI\'ve created a detailed onboarding plan for you. You\'ll receive access to all resources shortly.\n\nBest regards,\nThe Team'
+          }
+        },
+        {
+          id: `task-${Date.now()}-3`,
+          type: 'slack',
+          title: 'Notify team',
+          description: 'Alert the team about new client',
+          priority: 'low',
+          estimatedTime: '5 seconds',
+          status: 'pending',
+          order: 3,
+          position: { x: 700, y: 100 },
+          config: {
+            channel: 'social',
+            message: '🎉 New client just signed up! Onboarding workflow initiated and documentation created.'
+          }
+        }
+      ];
+    } else if (prompt.toLowerCase().includes('project') || prompt.toLowerCase().includes('plan')) {
+      tasks = [
+        {
+          id: `task-${Date.now()}-1`,
+          type: 'notion',
+          title: 'Create project plan',
+          description: 'Generate comprehensive project documentation',
+          priority: 'high',
+          estimatedTime: '45 seconds',
+          status: 'pending',
+          order: 1,
+          position: { x: 100, y: 100 },
+          config: {
+            project: prompt.length > 50 ? `${prompt.substring(0, 50)}...` : prompt,
+            content: `Detailed project planning for: ${prompt}. Include objectives, timeline, resources, milestones, and success metrics.`
+          }
+        },
+        {
+          id: `task-${Date.now()}-2`,
+          type: 'slack',
+          title: 'Share project update',
+          description: 'Notify team about new project',
+          priority: 'medium',
+          estimatedTime: '5 seconds',
+          status: 'pending',
+          order: 2,
+          position: { x: 400, y: 100 },
+          config: {
+            channel: 'social',
+            message: `📋 New project plan created: "${prompt.length > 50 ? prompt.substring(0, 50) + '...' : prompt}". Check Notion for details!`
+          }
+        }
+      ];
+    } else if (prompt.toLowerCase().includes('meeting')) {
+      tasks = [
+        {
+          id: `task-${Date.now()}-1`,
+          type: 'notion',
+          title: 'Create meeting agenda',
+          description: 'Generate meeting agenda and notes template',
+          priority: 'medium',
+          estimatedTime: '30 seconds',
+          status: 'pending',
+          order: 1,
+          position: { x: 100, y: 100 },
+          config: {
+            project: 'Meeting Agenda and Notes',
+            content: `Create a comprehensive meeting agenda for: ${prompt}. Include discussion points, action items template, and follow-up tasks.`
+          }
+        },
+        {
+          id: `task-${Date.now()}-2`,
+          type: 'email',
+          title: 'Send meeting invite',
+          description: 'Email team about upcoming meeting',
+          priority: 'medium',
+          estimatedTime: '20 seconds',
+          status: 'pending',
+          order: 2,
+          position: { x: 400, y: 100 },
+          config: {
+            recipient: 'team@example.com',
+            subject: 'Meeting Scheduled - Please Review Agenda',
+            message: `Hi team,\n\nI've scheduled a meeting regarding: ${prompt}\n\nI've created a detailed agenda in Notion. Please review before the meeting.\n\nBest regards`
+          }
+        }
+      ];
+    } else {
+      // Default workflow with Notion documentation
+      tasks = [
+        {
+          id: `task-${Date.now()}-1`,
+          type: 'notion',
+          title: 'Create project documentation',
+          description: 'Generate detailed project plan and documentation',
+          priority: 'high',
+          estimatedTime: '45 seconds',
+          status: 'pending',
+          order: 1,
+          position: { x: 100, y: 100 },
+          config: {
+            project: prompt.length > 30 ? `${prompt.substring(0, 30)}...` : prompt,
+            content: `AI-generated project plan for: ${prompt}. Include overview, objectives, implementation steps, and success criteria.`
+          }
+        },
+        {
+          id: `task-${Date.now()}-2`,
+          type: 'email',
+          title: 'Send outreach email',
+          description: 'Initial outreach based on your prompt',
+          priority: 'medium',
+          estimatedTime: '30 seconds',
+          status: 'pending',
+          order: 2,
+          position: { x: 400, y: 100 },
+          config: {
+            recipient: 'contact@example.com',
+            subject: 'New Project Initiative',
+            message: `Hi there!\n\nI wanted to reach out regarding: ${prompt}\n\nI've created a detailed project plan that outlines our approach. Would you be interested in learning more?\n\nBest regards`
+          }
+        }
+      ];
+    }
+  
+    const newWorkflow = {
+      id: workflowId,
+      name: prompt.length > 30 ? `${prompt.substring(0, 30)}...` : prompt,
+      description: `AI-generated workflow from: "${prompt}"`,
+      generatedAt: new Date().toISOString(),
+      status: 'active',
+      notes: [
+        {
+          id: `note-${Date.now()}`,
+          type: 'system',
+          content: `🤖 Workflow generated from prompt: "${prompt}"`,
+          timestamp: new Date().toISOString()
+        }
+      ],
+      tasks
+    };
+  
+    actions.addWorkflow(newWorkflow);
+    return newWorkflow;
+  },
 
     // Clear all data (useful for debugging)
     clearAllData: () => {
@@ -709,5 +948,7 @@ export function useWorkflow() {
   }
   return context;
 }
+
+
 
 export default WorkflowContext;

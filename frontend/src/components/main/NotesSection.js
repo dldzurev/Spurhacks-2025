@@ -145,8 +145,8 @@ export default function WorkflowNotesTerminal() {
           </div>
         ) : (
           <div className="space-y-1">
-            {notes.map((note, index) => (
-              <div key={note.id || index} className="group">
+{notes.map((note, index) => (
+  <div key={note.id ? `${note.id}-${index}` : `note-${index}-${Date.now()}`} className="group">
                 <div className="flex items-start space-x-3">
                   {/* Timestamp */}
                   <span className="text-gray-400 text-xs flex-shrink-0 w-24">

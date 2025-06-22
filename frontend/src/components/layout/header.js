@@ -59,14 +59,15 @@ export default function Header() {
           <div className="flex items-center space-x-8">
             {/* Logo */}
             <div className="flex items-center space-x-3">
-              <div className="h-8 w-8 rounded-lg bg-gray-900 flex items-center justify-center">
-                <div className="h-4 w-4 rounded-sm bg-white"></div>
-              </div>
-              <span className="text-xl font-semibold text-gray-900 hidden sm:block">
-                Conductor
-              </span>
-            </div>
-            
+                <img 
+                    src="/logo.png" 
+                    alt="Conductor Logo" 
+                    className="h-9 w-9 rounded-lg object-contain"
+                />
+                <span className="text-xl font-semibold text-gray-900 hidden sm:block">
+                    Conductor
+                </span>
+                </div>
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex space-x-1">
               {navigation.map((item) => (

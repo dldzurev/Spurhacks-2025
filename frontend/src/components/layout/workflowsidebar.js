@@ -158,17 +158,17 @@ export default function SolarizedWorkflowSidebar({ activeWorkflow, setActiveWork
     const stats = getWorkflowStats(workflow);
     
     if (stats.workflowCompleted) {
-      return <CheckCircle className="w-3 h-3 text-green-600" />;
+      return <CheckCircle className="w-4 h-4 text-green-600" />;
     } else if (stats.failed > 0) {
-      return <AlertCircle className="w-3 h-3 text-red-600" />;
+      return <AlertCircle className="w-4 h-4 text-red-600" />;
     } else if (stats.allCompleted) {
-      return <CheckCircle className="w-3 h-3 text-green-600" />;
+      return <CheckCircle className="w-4 h-4 text-green-600" />;
     } else if (stats.isRunning) {
-      return <Activity className="w-3 h-3 text-blue-600 animate-pulse" />;
+      return <Activity className="w-4 h-4 text-blue-600 animate-pulse" />;
     } else if (workflow.status === 'active') {
-      return <Zap className="w-3 h-3 text-cyan-600" />;
+      return <Zap className="w-4 h-4 text-cyan-600" />;
     } else {
-      return <Clock className="w-3 h-3 text-gray-400" />;
+      return <Clock className="w-4 h-4 text-gray-400" />;
     }
   };
 
@@ -216,29 +216,29 @@ export default function SolarizedWorkflowSidebar({ activeWorkflow, setActiveWork
       <div className="bg-gray-200 border-b border-gray-300 px-4 py-3">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-2">
-            <Terminal className="w-4 h-4 text-gray-600" />
-            <span className="text-sm font-medium text-gray-700">workflows</span>
+            <Terminal className="w-5 h-5 text-gray-600" />
+            <span className="text-base font-medium text-gray-700">workflows</span>
           </div>
           <button
             onClick={handleNewWorkflow}
-            className="inline-flex items-center gap-x-1.5 rounded bg-gray-700 px-2.5 py-1.5 text-xs font-medium text-gray-100 hover:bg-gray-600 transition-colors"
+            className="inline-flex items-center gap-x-1.5 rounded bg-gray-700 px-3 py-2 text-sm font-medium text-gray-100 hover:bg-gray-600 transition-colors"
           >
-            <Plus className="w-3 h-3" />
+            <Plus className="w-4 h-4" />
             new
           </button>
         </div>
 
         {/* Search Bar */}
         <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
-            <Search className="w-3.5 h-3.5 text-gray-500" />
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="w-4 h-4 text-gray-500" />
           </div>
           <input
             type="search"
             placeholder="search workflows..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="block w-full pl-8 pr-3 py-1.5 border border-gray-300 rounded bg-white text-xs placeholder-gray-500 focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-colors font-mono"
+            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded bg-white text-sm placeholder-gray-500 focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-colors font-mono"
           />
         </div>
       </div>
@@ -248,13 +248,13 @@ export default function SolarizedWorkflowSidebar({ activeWorkflow, setActiveWork
         {filteredWorkflows.length === 0 ? (
           // Empty State
           <div className="flex flex-col items-center justify-center h-64 px-4 text-center">
-            <div className="w-10 h-10 bg-gray-200 border border-gray-300 rounded flex items-center justify-center mb-3">
-              <Database className="w-5 h-5 text-gray-500" />
+            <div className="w-12 h-12 bg-gray-200 border border-gray-300 rounded flex items-center justify-center mb-4">
+              <Database className="w-6 h-6 text-gray-500" />
             </div>
-            <div className="text-xs font-medium text-gray-700 mb-1">
+            <div className="text-sm font-medium text-gray-700 mb-2">
               {searchQuery ? 'no workflows found' : 'no workflows'}
             </div>
-            <div className="text-xs text-gray-500 mb-3">
+            <div className="text-sm text-gray-500 mb-4">
               {searchQuery 
                 ? 'try different search terms' 
                 : 'create your first workflow'
@@ -263,15 +263,15 @@ export default function SolarizedWorkflowSidebar({ activeWorkflow, setActiveWork
             {!searchQuery && (
               <button
                 onClick={handleNewWorkflow}
-                className="inline-flex items-center gap-x-1 rounded bg-gray-700 px-2.5 py-1.5 text-xs font-medium text-gray-100 hover:bg-gray-600 transition-colors"
+                className="inline-flex items-center gap-x-1.5 rounded bg-gray-700 px-3 py-2 text-sm font-medium text-gray-100 hover:bg-gray-600 transition-colors"
               >
-                <Plus className="w-3 h-3" />
+                <Plus className="w-4 h-4" />
                 create
               </button>
             )}
           </div>
         ) : (
-          <div className="p-2 space-y-1">
+          <div className="p-3 space-y-2">
             {filteredWorkflows.map((workflow) => {
               const stats = getWorkflowStats(workflow);
               const isActive = activeWorkflowId === workflow.id;
@@ -282,7 +282,7 @@ export default function SolarizedWorkflowSidebar({ activeWorkflow, setActiveWork
                   key={workflow.id}
                   onClick={() => handleWorkflowSelect(workflow)}
                   className={classNames(
-                    'group relative rounded border p-3 cursor-pointer transition-all text-xs',
+                    'group relative rounded border p-4 cursor-pointer transition-all text-sm',
                     isActive
                       ? 'bg-blue-50 border-blue-300 shadow-sm'
                       : 'bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300',
@@ -291,38 +291,38 @@ export default function SolarizedWorkflowSidebar({ activeWorkflow, setActiveWork
                 >
                   {/* Main Content */}
                   <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0 space-y-2">
+                    <div className="flex-1 min-w-0 space-y-3">
                       {/* Header */}
                       <div className="flex items-center gap-x-2">
                         {getStatusIcon(workflow)}
                         <span className={classNames(
-                          "font-medium truncate",
+                          "font-medium truncate text-base",
                           isCompleted ? "text-gray-600 line-through" : "text-gray-800"
                         )}>
                           {workflow.name}
                         </span>
                         <span className={classNames(
-                          'text-xs',
+                          'text-sm',
                           getStatusColor(workflow)
                         )}>
                           [{getStatusText(workflow)}]
                         </span>
                       </div>
                       
-                      <div className="text-gray-600 leading-relaxed">
+                      <div className="text-gray-600 leading-relaxed text-sm">
                         {workflow.description}
                       </div>
                       
                       {/* Progress */}
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between text-gray-500">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-gray-500 text-sm">
                           <span>progress</span>
                           <span>{stats.completed}/{stats.total}</span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-1">
+                        <div className="w-full bg-gray-200 rounded-full h-2">
                           <div 
                             className={classNames(
-                              "h-1 rounded-full transition-all",
+                              "h-2 rounded-full transition-all",
                               stats.failed > 0 ? "bg-red-500" : 
                               (stats.allCompleted || isCompleted) ? "bg-green-500" : "bg-blue-500"
                             )}
@@ -334,29 +334,29 @@ export default function SolarizedWorkflowSidebar({ activeWorkflow, setActiveWork
                       </div>
                       
                       {/* Meta Info */}
-                      <div className="flex items-center justify-between text-gray-500">
+                      <div className="flex items-center justify-between text-gray-500 text-sm">
                         <span>{stats.total} tasks</span>
                         <span>{formatDate(workflow.generatedAt)}</span>
                       </div>
 
                       {/* Task Status - RESTORED ORIGINAL LOGIC */}
                       {(stats.completed > 0 || stats.failed > 0) && (
-                        <div className="flex items-center gap-x-3">
+                        <div className="flex items-center gap-x-4">
                           {stats.completed > 0 && (
-                            <span className="inline-flex items-center gap-x-1 text-green-600">
-                              <CheckCircle className="w-2.5 h-2.5" />
+                            <span className="inline-flex items-center gap-x-1 text-green-600 text-sm">
+                              <CheckCircle className="w-3.5 h-3.5" />
                               {stats.completed}
                             </span>
                           )}
                           {stats.failed > 0 && (
-                            <span className="inline-flex items-center gap-x-1 text-red-600">
-                              <AlertCircle className="w-2.5 h-2.5" />
+                            <span className="inline-flex items-center gap-x-1 text-red-600 text-sm">
+                              <AlertCircle className="w-3.5 h-3.5" />
                               {stats.failed}
                             </span>
                           )}
                           {stats.pending > 0 && (
-                            <span className="inline-flex items-center gap-x-1 text-blue-600">
-                              <Clock className="w-2.5 h-2.5" />
+                            <span className="inline-flex items-center gap-x-1 text-blue-600 text-sm">
+                              <Clock className="w-3.5 h-3.5" />
                               {stats.pending}
                             </span>
                           )}
@@ -371,43 +371,43 @@ export default function SolarizedWorkflowSidebar({ activeWorkflow, setActiveWork
                           e.stopPropagation();
                           setShowActionMenu(showActionMenu === workflow.id ? null : workflow.id);
                         }}
-                        className="flex items-center justify-center w-6 h-6 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors opacity-0 group-hover:opacity-100"
+                        className="flex items-center justify-center w-8 h-8 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors opacity-0 group-hover:opacity-100"
                       >
-                        <MoreVertical className="w-3.5 h-3.5" />
+                        <MoreVertical className="w-4 h-4" />
                       </button>
                       
                       {showActionMenu === workflow.id && (
-                        <div className="absolute right-0 z-10 mt-1 w-36 origin-top-right rounded border border-gray-200 bg-white shadow-lg">
-                          <div className="py-1 text-xs">
+                        <div className="absolute right-0 z-10 mt-1 w-40 origin-top-right rounded border border-gray-200 bg-white shadow-lg">
+                          <div className="py-1 text-sm">
                             <button
                               onClick={(e) => handleWorkflowAction('edit', workflow, e)}
-                              className="flex items-center w-full px-3 py-1.5 text-gray-700 hover:bg-gray-50"
+                              className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-gray-50"
                             >
-                              <Edit3 className="w-3 h-3 mr-2" />
+                              <Edit3 className="w-4 h-4 mr-3" />
                               edit
                             </button>
                             <button
                               onClick={(e) => handleWorkflowAction('duplicate', workflow, e)}
-                              className="flex items-center w-full px-3 py-1.5 text-gray-700 hover:bg-gray-50"
+                              className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-gray-50"
                             >
-                              <Copy className="w-3 h-3 mr-2" />
+                              <Copy className="w-4 h-4 mr-3" />
                               duplicate
                             </button>
                             {workflow.status !== 'completed' && (
                               <button
                                 onClick={(e) => handleWorkflowAction('complete', workflow, e)}
-                                className="flex items-center w-full px-3 py-1.5 text-green-700 hover:bg-green-50"
+                                className="flex items-center w-full px-4 py-2 text-green-700 hover:bg-green-50"
                               >
-                                <Check className="w-3 h-3 mr-2" />
+                                <Check className="w-4 h-4 mr-3" />
                                 complete
                               </button>
                             )}
                             <div className="border-t border-gray-100 my-1"></div>
                             <button
                               onClick={(e) => handleWorkflowAction('delete', workflow, e)}
-                              className="flex items-center w-full px-3 py-1.5 text-red-600 hover:bg-red-50"
+                              className="flex items-center w-full px-4 py-2 text-red-600 hover:bg-red-50"
                             >
-                              <Trash2 className="w-3 h-3 mr-2" />
+                              <Trash2 className="w-4 h-4 mr-3" />
                               delete
                             </button>
                           </div>
@@ -418,7 +418,7 @@ export default function SolarizedWorkflowSidebar({ activeWorkflow, setActiveWork
 
                   {/* Active Indicator */}
                   {isActive && (
-                    <div className="absolute left-0 top-3 bottom-3 w-0.5 bg-blue-500 rounded-full"></div>
+                    <div className="absolute left-0 top-4 bottom-4 w-1 bg-blue-500 rounded-full"></div>
                   )}
                 </div>
               );
@@ -428,20 +428,20 @@ export default function SolarizedWorkflowSidebar({ activeWorkflow, setActiveWork
       </div>
 
       {/* Footer Stats - RESTORED ORIGINAL STATS */}
-      <div className="bg-gray-200 border-t border-gray-300 px-4 py-3">
-        <div className="grid grid-cols-3 gap-3 text-center text-xs">
+      <div className="bg-gray-200 border-t border-gray-300 px-4 py-4">
+        <div className="grid grid-cols-3 gap-4 text-center text-sm">
           <div>
-            <div className="font-medium text-gray-800">{workflows.length}</div>
+            <div className="font-medium text-gray-800 text-lg">{workflows.length}</div>
             <div className="text-gray-600">total</div>
           </div>
           <div>
-            <div className="font-medium text-cyan-600">
+            <div className="font-medium text-cyan-600 text-lg">
               {workflows.filter(w => w.status === 'active').length}
             </div>
             <div className="text-gray-600">active</div>
           </div>
           <div>
-            <div className="font-medium text-blue-600">
+            <div className="font-medium text-blue-600 text-lg">
               {workflows.filter(w => {
                 const stats = getWorkflowStats(w);
                 return stats.isRunning;
