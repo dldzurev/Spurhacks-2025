@@ -1,1 +1,1 @@
-key = 'https://hooks.slack.com/services/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'
+key = 'https://hooks.slack.com/services/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'

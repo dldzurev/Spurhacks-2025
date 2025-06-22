@@ -3,7 +3,7 @@ import smtplib
 from gmail_key import key
 def send_email(receiver, message):
     email = "d.j.spurhacks@gmail.com"
-    subject = "Hey this is Everest!"
+    subject = "Hey this is Conductor AI!"
     
     text = f"Subject: {subject}\n\n{message}"
     

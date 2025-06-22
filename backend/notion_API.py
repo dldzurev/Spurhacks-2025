@@ -6,9 +6,9 @@ import subprocess
 import sys
 
 # ─── CONFIG ───────────────────────────────────────────────────────────────────
-GENAI_API_KEY      = ""
-NOTION_TOKEN       = ""
-NOTION_PARENT_PAGE = ""
+GENAI_API_KEY      = "AIzaSyB81fWNEHZ80iscjLzWH2Vl8lgfZqu5tDM"
+NOTION_TOKEN       = "ntn_r514792473702g65rSwmKhESSlbZnOeRbGBxo97yDkj6jE"
+NOTION_PARENT_PAGE = "219132d7190180d6b6c9c292924772a4"
 
 # Just change this if you want to try a different/faster model:
 MODEL_NAME         = "gemini-2.5-flash"

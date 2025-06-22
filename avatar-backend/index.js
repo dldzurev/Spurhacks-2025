@@ -64,8 +64,7 @@ const generateAudioWithRetry = async (apiKey, voiceId, fileName, text, maxRetrie
     }
   }
   return false;
-}
-  
+};
 const lipSyncMessage = async (message) => {
   const time = new Date().getTime();
   console.log(`Starting conversion for message ${message}`);
@@ -162,54 +161,53 @@ app.post("/chat", async (req, res) => {
   console.log(`🔍 Checking message: "${userMessage}"`);
   console.log(`🎯 Detected workflow type: ${workflowType}`);
   
-// Move the workflow sending to after audio processing
-if (workflowType) {
-  console.log(`✅ WORKFLOW DETECTED: ${workflowType} from: "${userMessage}"`);
-  
-  // Return predefined workflow response
-  const messages = [...workflowResponses[workflowType]];
-  
-  console.log(`🎤 Generating audio for ${messages.length} predefined messages...`);
-  
-  // Generate audio and lipsync for predefined messages
-  for (let i = 0; i < messages.length; i++) {
-    const message = messages[i];
-    const fileName = `audios/message_${i}.mp3`;
-    const textInput = message.text;
+  if (workflowType) {
+    console.log(`✅ WORKFLOW DETECTED: ${workflowType} from: "${userMessage}"`);
+    console.log('📤 Sending workflow to Next.js and returning predefined response');
     
-    console.log(`🔊 Processing message ${i + 1}/${messages.length}`);
+    // Send workflow to Next.js in background
+    sendWorkflowToNextJS(workflowType, userMessage).catch(err => 
+      console.error('Workflow send failed:', err)
+    );
     
-    const audioSuccess = await generateAudioWithRetry(elevenLabsApiKey, voiceID, fileName, textInput);
+    // Return predefined workflow response
+    const messages = [...workflowResponses[workflowType]]; // Create a copy
     
-    if (audioSuccess) {
-      try {
-        await lipSyncMessage(i);
-        message.audio = await audioFileToBase64(fileName);
-        message.lipsync = await readJsonTranscript(`audios/message_${i}.json`);
-        console.log(`✅ Complete audio processing for message ${i + 1}`);
-      } catch (lipSyncError) {
-        console.error(`❌ Lip sync failed for message ${i}:`, lipSyncError.message);
-        message.audio = await audioFileToBase64(fileName);
+    console.log(`🎤 Generating audio for ${messages.length} predefined messages...`);
+    
+    // Generate audio and lipsync for predefined messages
+    for (let i = 0; i < messages.length; i++) {
+      const message = messages[i];
+      const fileName = `audios/message_${i}.mp3`;
+      const textInput = message.text;
+      
+      console.log(`🔊 Processing message ${i + 1}/${messages.length}`);
+      
+      // Try to generate audio with retries
+      const audioSuccess = await generateAudioWithRetry(elevenLabsApiKey, voiceID, fileName, textInput);
+      
+      if (audioSuccess) {
+        try {
+          await lipSyncMessage(i);
+          message.audio = await audioFileToBase64(fileName);
+          message.lipsync = await readJsonTranscript(`audios/message_${i}.json`);
+          console.log(`✅ Complete audio processing for message ${i + 1}`);
+        } catch (lipSyncError) {
+          console.error(`❌ Lip sync failed for message ${i}:`, lipSyncError.message);
+          message.audio = await audioFileToBase64(fileName);
+          message.lipsync = null;
+        }
+      } else {
+        console.log(`⚠️ Sending message ${i + 1} without audio due to API issues`);
+        message.audio = "";
         message.lipsync = null;
       }
-    } else {
-      console.log(`⚠️ Sending message ${i + 1} without audio due to API issues`);
-      message.audio = "";
-      message.lipsync = null;
     }
+    
+    console.log('✅ Workflow response ready, sending to client');
+    res.send({ messages });
+    return;
   }
-  
-  console.log('✅ Audio processing complete, now sending workflow to Next.js');
-  
-  // Send workflow to Next.js AFTER audio processing is done
-  sendWorkflowToNextJS(workflowType, userMessage).catch(err => 
-    console.error('Workflow send failed:', err)
-  );
-  
-  console.log('✅ Workflow response ready, sending to client');
-  res.send({ messages });
-  return;
-}
 
   // 🚀 FALLBACK: Original OpenAI logic for non-workflow messages
   console.log('❌ No workflow detected, using OpenAI for response');
@@ -241,16 +239,8 @@ if (workflowType) {
   
   let messages = JSON.parse(completion.choices[0].message.content);
   if (messages.messages) {
-    messages = messages.messages; // ChatGPT sometimes returns {messages: [...]}
+    messages = messages.messages; // ChatGPT is not 100% reliable, sometimes it directly returns an array and sometimes a JSON object with a messages property
   }
-  
-  // Ensure messages is always an array
-  if (!Array.isArray(messages)) {
-    console.log('⚠️ Response is not an array, wrapping in array:', messages);
-    messages = [messages];
-  }
-  
-  console.log(`🎤 Processing ${messages.length} OpenAI messages for audio generation...`);
 
   // Generate audio and lipsync for OpenAI messages
   for (let i = 0; i < messages.length; i++) {
@@ -258,27 +248,10 @@ if (workflowType) {
     const fileName = `audios/message_${i}.mp3`;
     const textInput = message.text;
     
-    console.log(`🔊 Processing OpenAI message ${i + 1}/${messages.length}: "${textInput}"`);
-    
-    // Try to generate audio with retries
-    const audioSuccess = await generateAudioWithRetry(elevenLabsApiKey, voiceID, fileName, textInput);
-    
-    if (audioSuccess) {
-      try {
-        await lipSyncMessage(i);
-        message.audio = await audioFileToBase64(fileName);
-        message.lipsync = await readJsonTranscript(`audios/message_${i}.json`);
-        console.log(`✅ Complete audio processing for OpenAI message ${i + 1}`);
-      } catch (lipSyncError) {
-        console.error(`❌ Lip sync failed for OpenAI message ${i}:`, lipSyncError.message);
-        message.audio = await audioFileToBase64(fileName);
-        message.lipsync = null;
-      }
-    } else {
-      console.log(`⚠️ Sending OpenAI message ${i + 1} without audio due to API issues`);
-      message.audio = "";
-      message.lipsync = null;
-    }
+    await voice.textToSpeech(elevenLabsApiKey, voiceID, fileName, textInput);
+    await lipSyncMessage(i);
+    message.audio = await audioFileToBase64(fileName);
+    message.lipsync = await readJsonTranscript(`audios/message_${i}.json`);
   }
 
   res.send({ messages });

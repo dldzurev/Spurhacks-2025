@@ -2,42 +2,127 @@
 
 export const workflowTemplates = {
     onboarding: {
-      name: 'Employee Onboarding Workflow',
-      description: 'Complete onboarding process for new team members',
+      name: 'Co-op Student Onboarding - Daniel',
+      description: 'Complete onboarding process for new co-op student Daniel',
       tasks: [
         {
           type: 'email',
-          title: 'Send welcome email',
-          description: 'Welcome new employee with company info',
+          title: 'Send co-op offer email',
+          description: 'Send official co-op offer letter to Daniel',
           priority: 'high',
           estimatedTime: '2 minutes',
           config: {
-            recipient: 'new.employee@company.com',
-            subject: 'Welcome to the team!',
-            message: 'Welcome aboard! Here\'s everything you need to get started...'
+            recipient: 'dz.daniel47@gmail.com',
+            subject: 'Congratulations! Your Co-op Offer at [Company Name]',
+            message: `Hi Daniel,
+
+Congratulations! We're thrilled to offer you a co-op position at our company for the upcoming term.
+
+Offer Details:
+- Position: Software Development Co-op
+- Start Date: [Start Date]
+- Duration: 4 months
+- Location: [Office Location/Remote]
+
+We were impressed by your skills and enthusiasm during the interview process. You'll be working with our development team on exciting projects that will give you real-world experience.
+
+Next Steps:
+1. Please confirm your acceptance by replying to this email
+2. Complete the attached paperwork
+3. Await your onboarding package with first-day details
+
+We're excited to welcome you to the team!
+
+Best regards,
+[Your Name]
+[Title]
+[Company Name]`
+          }
+        },
+        {
+          type: 'phone',
+          title: 'Follow-up call to Daniel',
+          description: 'Call Daniel to confirm he received the offer email and answer any questions',
+          priority: 'high',
+          estimatedTime: '10 minutes',
+          config: {
+            recipient: '+16478235759', // You can update this with Daniel's actual number
+            message: `Hi Daniel! This is [Your Name] from [Company]. I wanted to follow up on the co-op offer email we sent you today. Did you have a chance to review it? I'm calling to see if you have any questions about the position, start date, or anything else. We're really excited to have you join our team for the co-op term. Feel free to ask me anything!`
+          }
+        },
+        {
+          type: 'document',
+          title: 'Create onboarding Notion doc',
+          description: 'Create comprehensive onboarding documentation for Daniel in Notion',
+          priority: 'medium',
+          estimatedTime: '15 minutes',
+          config: {
+            platform: 'Notion',
+            title: 'Daniel\'s Co-op Onboarding Guide',
+            content: `# Welcome Daniel! 🎉
+
+## First Day Checklist
+- [ ] Office tour (or virtual setup if remote)
+- [ ] Meet your mentor and team members
+- [ ] Set up development environment
+- [ ] Review project assignments
+- [ ] Complete IT setup (accounts, equipment)
+
+## Week 1 Goals
+- [ ] Complete security training
+- [ ] Attend team standup meetings
+- [ ] Set up development tools and IDE
+- [ ] Review codebase and documentation
+- [ ] Have 1:1 with your manager
+
+## Resources
+- **Slack workspace:** [Company Slack]
+- **Code repository:** [GitHub/GitLab links]
+- **Documentation:** [Internal wiki links]
+- **Team calendar:** [Calendar link]
+
+## Your Team
+- **Manager:** [Manager Name] - [email]
+- **Mentor:** [Mentor Name] - [email]
+- **Buddy:** [Buddy Name] - [email]
+
+## Projects You'll Work On
+- Project A: [Description]
+- Project B: [Description]
+
+## Important Dates
+- Start Date: [Date]
+- Mid-term review: [Date]
+- Final presentation: [Date]
+- Last day: [Date]
+
+Welcome to the team! 🚀`,
+            assignee: 'Daniel',
+            dueDate: 'First day'
           }
         },
         {
           type: 'slack',
-          title: 'Notify HR team',
-          description: 'Alert HR about new employee start date',
+          title: 'Introduce Daniel to the team',
+          description: 'Send introduction message about Daniel joining as co-op student',
           priority: 'medium',
-          estimatedTime: '30 seconds',
-          config: {
-            channel: '#hr-notifications',
-            message: '🎉 New employee starting today! Please prepare onboarding materials.'
-          }
-        },
-        {
-          type: 'calendar',
-          title: 'Schedule orientation meeting',
-          description: 'Book 1-hour orientation session',
-          priority: 'high',
           estimatedTime: '1 minute',
           config: {
-            title: 'New Employee Orientation',
-            duration: '60 minutes',
-            attendees: ['hr@company.com', 'manager@company.com']
+            channel: '#general',
+            message: `🎉 Team Introduction! 🎉
+
+We're excited to welcome Daniel to our team as our new co-op student! 
+
+👨‍💻 **About Daniel:**
+- Starting his co-op term with us on [Start Date]
+- Will be working on [project/team name]
+- Brings fresh perspective and enthusiasm to our development team
+
+Daniel will be working closely with [mentor name] and contributing to [specific projects]. Let's all give him a warm welcome and help him get settled in!
+
+Daniel, feel free to introduce yourself when you join! We're looking forward to working with you. 🚀
+
+#coop #newteammember #welcome`
           }
         }
       ]
@@ -137,7 +222,13 @@ export const workflowTemplates = {
       'new hire',
       'welcome new',
       'employee orientation',
-      'first day'
+      'first day',
+      'co-op',
+      'coop',
+      'intern',
+      'student',
+      'daniel',
+      'new team member'
     ],
     followup: [
       'follow up',
@@ -162,17 +253,17 @@ export const workflowTemplates = {
   export const workflowResponses = {
     onboarding: [
       {
-        text: "Perfect! I'll help you set up an employee onboarding workflow.",
+        text: "Perfect! I'll help you set up Daniel's co-op onboarding workflow.",
         facialExpression: "smile",
         animation: "Talking_1"
       },
       {
-        text: "This includes welcome emails, HR notifications, and scheduling orientation meetings.",
+        text: "This includes his offer email, follow-up call, onboarding documentation, and team introduction.",
         facialExpression: "default",
         animation: "Talking_0"
       },
       {
-        text: "Your onboarding workflow is now ready to deploy!",
+        text: "Daniel's onboarding workflow is now ready to deploy! Let's give him a great first experience.",
         facialExpression: "smile",
         animation: "Talking_2"
       }

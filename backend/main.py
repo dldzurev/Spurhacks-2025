@@ -13,7 +13,7 @@ app = FastAPI()
 # Allow CORS for local frontend development
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:3001", "http://127.0.0.1:3001"],  # Add your frontend URL
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -62,6 +62,44 @@ def handle_action(request: dict):
             return {"response": f"successfully sent message to {channel_name}: {message}"}
         else:
             return {"response": "Failed to send message invalid permissions"}
-    
+    elif action_type == "notion" or action_type == "document":
+        # Handle both 'notion' and 'document' types for backward compatibility
+        project = request.get("project", "")
+        content = request.get("content", "")
+        
+        # Also check for alternative field names
+        if not project:
+            project = request.get("title", "")
+        if not content:
+            content = request.get("message", "")
+        
+        if not project:
+            return {"response": "No project idea provided."}
+        
+        try:
+            # Prepare input for the notion script
+            input_data = project
+            if content:
+                input_data += f"\n\nAdditional details:\n{content}"
+            
+            # Use the current Python interpreter instead of venv path
+            # This will use whatever Python is currently running your FastAPI app
+            result = subprocess.run(
+                [sys.executable, "notion_API.py"],
+                input=input_data.encode(),
+                capture_output=True,
+                timeout=60
+            )
+            
+            if result.returncode == 0:
+                return {"response": f"Notion project page created successfully for '{project}'. Check your Notion workspace for the detailed project plan."}
+            else:
+                error_msg = result.stderr.decode().strip()
+                return {"response": f"Failed to create Notion project: {error_msg}"}
+                
+        except subprocess.TimeoutExpired:
+            return {"response": "Notion project creation timed out. Please try again."}
+        except Exception as e:
+            return {"response": f"Error running Notion integration: {str(e)}"}
     else:
         return {"response": "Please select a valid action"}

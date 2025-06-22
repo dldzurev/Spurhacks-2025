@@ -1,24 +1,43 @@
-#slack
+# slack_integration.py
 import requests
+import json
 import sys
 import getopt
 from slack_key import key as social_key
 
-all_key = 'https://hooks.slack.com/services/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'
+all_key = 'https://hooks.slack.com/services/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'
+
 
 def send_slack_message(message, channel="social"):
-    payload = '{"text":"%s"}' % message
+    # Properly format the JSON payload
+    payload = {
+        "text": message
+    }
+    
+    # Select the appropriate webhook
     webhook = social_key if channel == "social" else all_key
+    
     try:
+        # Send with proper headers
         r = requests.post(
             webhook,
-            data=payload
+            data=json.dumps(payload),
+            headers={'Content-Type': 'application/json'}
         )
-        return r.status_code == 200
-    except Exception:
+        
+        # Check for success (200) or other success codes
+        if r.status_code == 200:
+            return True
+        else:
+            print(f"Slack webhook returned status code: {r.status_code}")
+            print(f"Response: {r.text}")
+            return False
+            
+    except Exception as e:
+        print(f"Exception sending Slack message: {e}")
         return False
 
-def mane(argv):
+def main(argv):
     try:
         opts, args = getopt.getopt(argv, "hm:", ["message="])
     except getopt.GetoptError:
@@ -33,7 +52,11 @@ def mane(argv):
         elif opt in ("-m", "--message"):
             message = arg
 
-    send_slack_message(message)
+    success = send_slack_message(message)
+    if success:
+        print("Message sent successfully")
+    else:
+        print("Failed to send message")
 
 if __name__ == "__main__":
-    mane(sys.argv[1:])
+    main(sys.argv[1:])

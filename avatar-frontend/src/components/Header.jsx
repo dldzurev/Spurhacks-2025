@@ -18,9 +18,13 @@ import {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-6">
             <div className="flex items-center space-x-3">
-              <div className="h-8 w-8 rounded-lg bg-gray-900 flex items-center justify-center">
-                <div className="h-4 w-4 rounded-sm bg-white"></div>
-              </div>
+            <div className="flex items-center space-x-3">
+                <img 
+                    src="/logo.png" 
+                    alt="Conductor Logo" 
+                    className="h-9 w-9 rounded-lg object-contain"
+                />
+                </div>
               <div>
                 <h1 className="text-xl font-semibold text-gray-900 leading-tight">Conductor AI</h1>
                 <p className="text-sm text-gray-500 leading-tight">Business Assistant</p>
