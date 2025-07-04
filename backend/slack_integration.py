@@ -5,7 +5,7 @@ import sys
 import getopt
 from slack_key import key as social_key
 
-all_key = 'https://hooks.slack.com/services/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'
+all_key = '__________'
 
 
 def send_slack_message(message, channel="social"):

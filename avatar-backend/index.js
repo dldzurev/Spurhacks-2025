@@ -18,7 +18,7 @@ dotenv.config();
 let shouldZoom = false;
 
 const gemini = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY || "AIzaSyB81fWNEHZ80iscjLzWH2Vl8lgfZqu5tDM"
+  apiKey: process.env.GEMINI_API_KEY || "____________________"
 });
 const elevenLabsApiKey = process.env.ELEVEN_LABS_API_KEY;
 const voiceID = "9BWtsMINqrJLrRacOk9x";

@@ -6,13 +6,13 @@ import subprocess
 import sys
 
 # ─── CONFIG ───────────────────────────────────────────────────────────────────
-GENAI_API_KEY      = "AIzaSyB81fWNEHZ80iscjLzWH2Vl8lgfZqu5tDM"
-NOTION_TOKEN       = "ntn_r514792473702g65rSwmKhESSlbZnOeRbGBxo97yDkj6jE"
-NOTION_PARENT_PAGE = "219132d7190180d6b6c9c292924772a4"
+GENAI_API_KEY      = "______________"
+NOTION_TOKEN       = "______________"
+NOTION_PARENT_PAGE = "______________"
 
-# Just change this if you want to try a different/faster model:
+
 MODEL_NAME         = "gemini-2.5-flash"
-# e.g. MODEL_NAME = "chat-bison-001"
+
 # ────────────────────────────────────────────────────────────────────────────────
 
 # ─── init clients ─────────────────────────────────────────────────────────────
@@ -126,57 +126,3 @@ def main():
 if __name__ == "__main__":
     main()
 
-'''
-from notion_secret import notion_key
-from notion_client import Client
-
-NOTION_TOKEN = notion_key
-PARENT_PAGE_ID = "219132d7190180d6b6c9c292924772a4"  # the page you want to nest under
-
-notion = Client(auth=NOTION_TOKEN)
-
-def main():
-    idea = ("My software design")
-    if not idea:
-        print("No idea provided. Exiting.")
-        return
-
-    new_page = notion.pages.create(
-        parent={"page_id": PARENT_PAGE_ID},
-        properties={
-            "title": [
-                {"text": {"content": idea}}
-            ]
-        }
-    )
-    print(" Created sub-page:", new_page["id"])
-
-if __name__ == "__main__":
-    main()
-'''
-
-
-
-
-'''
-elif action_type == "notion":
-    project = request.get("project", "")
-    if not project:
-        return {"response": "No project idea provided."}
-    try:
-        # Path to your venv's python executable
-        venv_python = "./venv311/Scripts/python.exe" if sys.platform == "win32" else "./venv311/bin/python"
-        result = subprocess.run(
-            [venv_python, "notion_API.py"],
-            input=project.encode(),
-            capture_output=True,
-            cwd="backend",  # ensure correct working directory
-            timeout=60
-        )
-        if result.returncode == 0:
-            return {"response": "Notion project created successfully!"}
-        else:
-            return {"response": f"Failed to create Notion project: {result.stderr.decode()}"}
-    except Exception as e:
-        return {"response": f"Error running Notion integration: {str(e)}"}
-        '''
