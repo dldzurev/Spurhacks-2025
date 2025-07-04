@@ -1,3 +1,3 @@
-account_sid = '______'
-auth_token = '______'
+account_sid = '_______'
+auth_token = '_______'
 twilio_number = +00000000000
